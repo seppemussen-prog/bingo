@@ -111,6 +111,7 @@ export function useBingoGame() {
         }
       )
       .subscribe((status) => {
+        console.log("[v0] Realtime subscription status:", status)
         if (mounted) setIsConnected(status === "SUBSCRIBED")
       })
 
