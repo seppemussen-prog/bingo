@@ -66,7 +66,7 @@ export default function BingoPage() {
     frame();
   }, []);
 
-  // Show loading state while data loads from localStorage
+  // Show loading state while data loads from Supabase
   if (!isLoaded) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
