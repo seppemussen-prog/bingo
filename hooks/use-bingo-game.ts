@@ -40,6 +40,7 @@ function createInitialTeamData(): TeamData {
 export function useBingoGame() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isConnected, setIsConnected] = useState(false)
+  const [hasGame, setHasGame] = useState(false)
   const [team1, setTeam1] = useState<TeamData>({ card1: [], card2: [] })
   const [team2, setTeam2] = useState<TeamData>({ card1: [], card2: [] })
   const [gameFinished, setGameFinished] = useState(false)
@@ -55,6 +56,7 @@ export function useBingoGame() {
     setTeam1({ card1: game.team1_card1, card2: game.team1_card2 })
     setTeam2({ card1: game.team2_card1, card2: game.team2_card2 })
     setGameFinished(game.game_finished)
+    setHasGame(true)
   }, [])
 
   // Initialize and subscribe
@@ -73,24 +75,9 @@ export function useBingoGame() {
 
       if (data) {
         applyGameData(data as GameRow)
-      } else if (error?.code === "PGRST116") {
-        // No game exists, create one
-        const t1 = createInitialTeamData()
-        const t2 = createInitialTeamData()
-
-        await supabase.from("bingo_games").insert({
-          id: GAME_ID,
-          team1_card1: t1.card1,
-          team1_card2: t1.card2,
-          team2_card1: t2.card1,
-          team2_card2: t2.card2,
-          game_finished: false,
-        })
-
-        if (mounted) {
-          setTeam1(t1)
-          setTeam2(t2)
-        }
+      } else {
+        // No game exists yet - user needs to start one
+        if (mounted) setHasGame(false)
       }
 
       if (mounted) setIsLoaded(true)
@@ -111,7 +98,6 @@ export function useBingoGame() {
         }
       )
       .subscribe((status) => {
-        console.log("[v0] Realtime subscription status:", status)
         if (mounted) setIsConnected(status === "SUBSCRIBED")
       })
 
@@ -120,6 +106,28 @@ export function useBingoGame() {
       supabase.removeChannel(channel)
     }
   }, [supabase, applyGameData])
+
+  // Start a new game (called from UI)
+  const startGame = useCallback(async () => {
+    const t1 = createInitialTeamData()
+    const t2 = createInitialTeamData()
+
+    const { error } = await supabase.from("bingo_games").upsert({
+      id: GAME_ID,
+      team1_card1: t1.card1,
+      team1_card2: t1.card2,
+      team2_card1: t2.card1,
+      team2_card2: t2.card2,
+      game_finished: false,
+    })
+
+    if (!error) {
+      setTeam1(t1)
+      setTeam2(t2)
+      setGameFinished(false)
+      setHasGame(true)
+    }
+  }, [supabase])
 
   // Increment a category
   const handleIncrement = useCallback(
@@ -228,7 +236,9 @@ export function useBingoGame() {
     team2LastFilled,
     isLoaded,
     isConnected,
+    hasGame,
     gameFinished,
+    startGame,
     handleIncrement,
     handleFinish,
     handleReset,
