@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { TeamPanel } from "@/components/team-panel";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Trophy, Flag } from "lucide-react";
+import { RotateCcw, Trophy, Flag, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { useBingoGame } from "@/hooks/use-bingo-game";
@@ -19,7 +19,9 @@ export default function BingoPage() {
     team2LastFilled,
     isLoaded,
     isConnected,
+    hasGame,
     gameFinished,
+    startGame,
     handleIncrement,
     handleFinish,
     handleReset,
@@ -74,6 +76,58 @@ export default function BingoPage() {
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Laden...</p>
         </div>
+      </main>
+    );
+  }
+
+  // Show start screen if no game exists yet
+  if (!hasGame) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-[#003366] to-[#004d99] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-white rounded-2xl p-8 sm:p-12 text-center shadow-2xl max-w-md w-full"
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#003366] to-[#0066cc] flex items-center justify-center">
+            <Play className="h-10 w-10 text-white ml-1" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 text-[#003366]">
+            Bingo Drive
+          </h1>
+          <p className="text-muted-foreground mb-2">
+            50 BVS &bull; 7 Ondernemen &bull; 13 Leven
+          </p>
+          <p className="text-sm text-muted-foreground mb-8">
+            Start een nieuw spel of wacht tot iemand anders een spel start.
+          </p>
+          
+          <div className="space-y-3">
+            <Button 
+              onClick={startGame} 
+              size="lg" 
+              className="w-full bg-[#003366] hover:bg-[#004080] text-lg py-6"
+            >
+              <Play className="mr-2 h-5 w-5" />
+              Start Nieuw Spel
+            </Button>
+            
+            <p className="text-xs text-muted-foreground">
+              Als iemand anders al een spel heeft gestart, wordt dit automatisch geladen.
+            </p>
+          </div>
+          
+          <div className={cn(
+            "mt-6 flex items-center justify-center gap-2 text-sm",
+            isConnected ? "text-green-600" : "text-yellow-600"
+          )}>
+            <span className={cn(
+              "w-2 h-2 rounded-full",
+              isConnected ? "bg-green-500 animate-pulse" : "bg-yellow-500"
+            )} />
+            {isConnected ? "Verbonden met server" : "Verbinden..."}
+          </div>
+        </motion.div>
       </main>
     );
   }
